@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Currency Converter</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center min-h-screen p-6">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl p-8">
+    <h1 class="text-3xl font-extrabold text-center mb-8 text-gray-800">💱 Real-Time Currency Converter</h1>
+
+    <!-- Input -->
+    <div class="mb-6">
+      <label class="block mb-2 font-semibold text-gray-700">Amount</label>
+      <input type="number" id="amount" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Enter amount" />
+    </div>
+
+    <!-- Currency selectors -->
+    <div class="grid grid-cols-2 gap-6 mb-6">
+      <div>
+        <label class="block mb-2 font-semibold text-gray-700">From</label>
+        <div class="relative">
+          <button id="fromBtn" class="dropdown-btn">
+            <span id="fromLabel">Select</span>
+            <span>▼</span>
+          </button>
+          <div id="fromMenu" class="dropdown-menu hidden">
+            <input type="text" placeholder="Search..." class="dropdown-search" id="fromSearch">
+            <div id="fromOptions"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block mb-2 font-semibold text-gray-700">To</label>
+        <div class="relative">
+          <button id="toBtn" class="dropdown-btn">
+            <span id="toLabel">Select</span>
+            <span>▼</span>
+          </button>
+          <div id="toMenu" class="dropdown-menu hidden">
+            <input type="text" placeholder="Search..." class="dropdown-search" id="toSearch">
+            <div id="toOptions"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Convert button -->
+    <button onclick="convert()" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">Convert</button>
+
+    <!-- Result -->
+    <div id="result" class="text-center mt-8 text-2xl font-extrabold text-gray-900"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
