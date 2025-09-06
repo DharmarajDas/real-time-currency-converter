@@ -132,3 +132,75 @@ async function convert() {
 setInterval(() => {
   if (document.getElementById("amount").value) convert();
 }, 300000);
+
+// --------- paste/replace your existing convert() with this ---------
+async function convert() {
+  const amountRaw = document.getElementById("amount").value;
+  const amount = parseFloat(amountRaw);
+  const resultEl = document.getElementById("result");
+
+  if (!amount || isNaN(amount)) {
+    resultEl.textContent = "⚠️ Enter a valid amount.";
+    return;
+  }
+  if (!fromCurrency || !toCurrency) {
+    resultEl.textContent = "⚠️ Select both currencies.";
+    return;
+  }
+  if (fromCurrency === toCurrency) {
+    resultEl.textContent = `${amount} ${fromCurrency} = ${amount} ${toCurrency} (same currency)`;
+    return;
+  }
+
+  // Helper to format numbers nicely
+  function fmt(n) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: 6 });
+  }
+
+  // 1) Try Frankfurter first
+  try {
+    // Frankfurter endpoint: returns { amount, base, date, rates: { TO: value } }
+    const frankUrl = `https://api.frankfurter.app/latest?amount=${encodeURIComponent(amount)}&from=${encodeURIComponent(fromCurrency)}&to=${encodeURIComponent(toCurrency)}`;
+    const r = await fetch(frankUrl, {cache: "no-store"});
+    if (r.ok) {
+      const data = await r.json();
+      // If frankfurter returned the target rate, use it
+      if (data && data.rates && data.rates[toCurrency] != null) {
+        const out = data.rates[toCurrency];
+        resultEl.textContent = `${amount} ${fromCurrency} = ${fmt(out)} ${toCurrency}  (source: Frankfurter)`;
+        return;
+      }
+      // else fall through to fallback
+      console.warn("Frankfurter returned no rate for", toCurrency, data);
+    } else {
+      console.warn("Frankfurter HTTP status:", r.status);
+    }
+  } catch (err) {
+    console.warn("Frankfurter request failed:", err);
+  }
+
+  // 2) Fallback: exchangerate.host (broader currency coverage)
+  try {
+    // exchangerate.host convert endpoint returns { motd, success, query, info, result }
+    const exUrl = `https://api.exchangerate.host/convert?from=${encodeURIComponent(fromCurrency)}&to=${encodeURIComponent(toCurrency)}&amount=${encodeURIComponent(amount)}`;
+    const r2 = await fetch(exUrl, {cache: "no-store"});
+    if (!r2.ok) throw new Error("exchangerate.host HTTP " + r2.status);
+    const data2 = await r2.json();
+    // exchangerate.host returns a `result` field with the converted amount
+    if (data2 && (data2.result != null)) {
+      resultEl.textContent = `${amount} ${fromCurrency} = ${fmt(data2.result)} ${toCurrency}  (source: exchangerate.host fallback)`;
+      return;
+    }
+    // some endpoints return rates map — handle that too just in case
+    if (data2 && data2.rates && data2.rates[toCurrency] != null) {
+      resultEl.textContent = `${amount} ${fromCurrency} = ${fmt(data2.rates[toCurrency])} ${toCurrency}  (source: exchangerate.host fallback)`;
+      return;
+    }
+    throw new Error("No usable rate found in exchangerate.host response");
+  } catch (err) {
+    console.error("Fallback exchangerate.host failed:", err);
+    resultEl.textContent = "Conversion failed — both APIs returned no rate or error. Check console.";
+  }
+}
+// --------------------------------------------------------------------
+
